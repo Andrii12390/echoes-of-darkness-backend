@@ -1,6 +1,6 @@
 import { PrismaClient, Card } from '@prisma/client';
 
-export default class CardService {
+class CardService {
   private prisma: PrismaClient = new PrismaClient();
 
   getCards(): Promise<Card[]> {
@@ -27,3 +27,5 @@ export default class CardService {
     });
   }
 }
+
+export default CardService;
