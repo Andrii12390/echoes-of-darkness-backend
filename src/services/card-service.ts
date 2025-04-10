@@ -1,5 +1,14 @@
 import { PrismaClient, Card } from '@prisma/client';
 
+interface ICard {
+  imageUrl: string;
+  name: string;
+  type: string;
+  lane: string;
+  description: string;
+  strength: number;
+}
+
 class CardService {
   private prisma: PrismaClient = new PrismaClient();
 
@@ -7,14 +16,14 @@ class CardService {
     return this.prisma.card.findMany();
   }
 
-  addCard(
-    imageUrl: string,
-    name: string,
-    type: string,
-    lane: string,
-    description: string,
-    strength: number
-  ): Promise<Card> {
+  addCard({
+    imageUrl,
+    name,
+    type,
+    lane,
+    description,
+    strength,
+  }: ICard): Promise<Card> {
     return this.prisma.card.create({
       data: {
         imageUrl,

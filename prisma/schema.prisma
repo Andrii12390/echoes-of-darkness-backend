@@ -7,26 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id Int @id @default(autoincrement())
-  username String
-  email String @unique
-  password String
-
+  id        Int      @id @default(autoincrement())
+  username  String
+  email     String   @unique
+  password  String?
+  googleId  String?  @map("google_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model Card {
-  id Int @id @default(autoincrement())
-  name String
-  imageUrl String
+  id          Int      @id @default(autoincrement())
+  name        String
+  imageUrl    String
   description String
-  type String
-  lane String
-  strength Int
-  
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  type        String
+  lane        String
+  strength    Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 }

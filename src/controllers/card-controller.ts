@@ -23,14 +23,16 @@ cardRouter.post(
         res.status(400).send('Missing parameters');
       }
 
-      const card = await cardService.addCard(
+      const cardData =  {
         imageUrl,
         name,
         type,
         lane,
         description,
         strength
-      );
+      }
+      
+      const card = await cardService.addCard(cardData);
 
       if (!card) {
         res.status(400).send('Card: error creating card');
