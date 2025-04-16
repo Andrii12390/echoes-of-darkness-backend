@@ -6,9 +6,10 @@ interface IGoogleProfile {
   googleId: string;
   email: string;
   username: string;
+  avatarUrl?: string; 
 }
 
-type TSafeUser = Omit<User, 'password' | 'googleId' | 'createdAt' | 'updatedAt'>;
+type TSafeUser = Pick<User, 'id' | 'email' | 'username' | 'avatarUrl'>;
 
 class AuthService {
   private prisma: PrismaClient = new PrismaClient();
@@ -69,31 +70,33 @@ class AuthService {
     let user = await this.prisma.user.findFirst({
       where: { googleId: profile.googleId },
     });
-
+  
     if (user) return this.generateToken(user.id);
-
+  
     user = await this.prisma.user.findUnique({
       where: { email: profile.email },
     });
-
+  
     if (user) {
       user = await this.prisma.user.update({
         where: { email: profile.email },
         data: {
           googleId: profile.googleId,
+          avatarUrl: profile.avatarUrl ?? user.avatarUrl
         },
       });
       return this.generateToken(user.id);
     }
-
+  
     user = await this.prisma.user.create({
       data: {
         googleId: profile.googleId,
         email: profile.email,
         username: profile.username,
+        avatarUrl: profile.avatarUrl || undefined,
       },
     });
-
+  
     return this.generateToken(user.id);
   }
 
@@ -104,6 +107,7 @@ class AuthService {
         id: true,
         email: true,
         username: true,
+        avatarUrl: true
       },
     });
   }

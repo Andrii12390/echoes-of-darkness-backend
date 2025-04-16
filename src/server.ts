@@ -1,11 +1,16 @@
 import express from 'express';
-import cardRouter from './controllers/card-controller';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
-import { errorHandler } from './middlewares/errorHandler';
-import authRouter from './controllers/auth-controller';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+
+import { PrismaClient } from '@prisma/client';
+
+import { errorHandler } from './middlewares/error-handler';
+
+import cardRouter from './controllers/card-controller';
+import authRouter from './controllers/auth-controller';
+import userRouter from './controllers/user-controller';
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -26,6 +31,7 @@ async function main() {
 
   app.use(`${apiPrefix}/card`, cardRouter);
   app.use(`${apiPrefix}/auth`, authRouter);
+  app.use(`${apiPrefix}/user`, userRouter);
 
   app.use(errorHandler);
 

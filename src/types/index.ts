@@ -1,3 +1,5 @@
+import { User } from "@prisma/client";
+
 export type TCard = {
   id: number;
   imageUrl: string;
@@ -8,4 +10,4 @@ export type TCard = {
   strength: number;
 };
 
-
+export type TSafeUser = Pick<User, 'id' | 'email' | 'username' | 'avatarUrl'>;
