@@ -18,14 +18,6 @@ export class CardService {
   }
 
   async findById(id: string) {
-    return await this.prisma.card.findUnique({
-      where: {
-        id
-      }
-    });
-  }
-
-  async deleteById(id: string) {
     const card = await this.prisma.card.findUnique({
       where: {
         id
@@ -35,6 +27,12 @@ export class CardService {
     if (!card) {
       throw new NotFoundException('Card not found');
     }
+
+    return card;
+  }
+
+  async deleteById(id: string) {
+    this.findById(id);
 
     return await this.prisma.card.delete({
       where: {
@@ -44,15 +42,7 @@ export class CardService {
   }
 
   async updateById(id: string, data: UpdateCardDto) {
-    const card = await this.prisma.card.findUnique({
-      where: {
-        id
-      }
-    });
-
-    if (!card) {
-      throw new NotFoundException('Card not found');
-    }
+    this.findById(id);
 
     return await this.prisma.card.update({
       where: {

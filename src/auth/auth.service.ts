@@ -5,12 +5,12 @@ import {
   UnauthorizedException
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RegistrationRequestDto } from './dto/registration.dto';
+import { RegistrationDto } from './dto/registration.dto';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './interfaces/jwt.interface';
-import { LoginRequestDto } from './dto/login.dto';
+import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { GooglePayload } from './interfaces/google.interface';
 import { GithubPayload } from './interfaces/github.interface';
@@ -33,7 +33,7 @@ export class AuthService {
     );
   }
 
-  async register(res: Response, dto: RegistrationRequestDto) {
+  async register(res: Response, dto: RegistrationDto) {
     const { username, email, password } = dto;
 
     const existedUser = await this.prisma.user.findUnique({
@@ -58,7 +58,7 @@ export class AuthService {
     return this.auth(res, newUser.id);
   }
 
-  async login(res: Response, dto: LoginRequestDto) {
+  async login(res: Response, dto: LoginDto) {
     const { email, password } = dto;
 
     const user = await this.prisma.user.findUnique({
