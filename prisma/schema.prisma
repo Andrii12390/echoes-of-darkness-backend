@@ -8,24 +8,27 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String  @id @default(uuid())
   username  String
-  email     String   @unique
-  avatarUrl String?
+  email     String  @unique
+  avatarUrl String? @map("avatar_url")
   password  String?
-  googleId  String?  @map("google_id")
+  googleId  String? @map("google_id")
+  githubId  String? @map("github_id")
+
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
 }
 
 model Card {
-  id          Int      @id @default(autoincrement())
+  id          String @id @default(uuid())
   name        String
   imageUrl    String
   description String
   type        String
-  lane        String
+  lane        Int
   strength    Int
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
 }
