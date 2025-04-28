@@ -4,12 +4,27 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async updateProfile(id: string, data: UpdateProfileDto) {
     return this.prisma.user.update({
       where: { id },
       data
     });
+  }
+
+  async findAllCards(id: string) {
+    return this.prisma.user.findUnique({
+      where: {
+        id
+      },
+      include: {
+        cards: {
+          include: {
+            card: true
+          }
+        }
+      }
+    })
   }
 }

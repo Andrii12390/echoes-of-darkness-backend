@@ -1,12 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CardType } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
   IsString,
-  IsUrl,
   Length
 } from 'class-validator';
 
@@ -22,7 +24,6 @@ export class UpdateCardDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @IsUrl()
   imageUrl: string;
 
   @ApiProperty()
@@ -35,8 +36,8 @@ export class UpdateCardDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @Length(2, 50)
+  @Transform(({ value }) => String(value).trim().toUpperCase())
+  @IsEnum(CardType)
   type: string;
 
   @ApiProperty()

@@ -21,4 +21,16 @@ export class UpdateProfileDto {
   @IsNotEmpty()
   @IsUrl()
   avatarUrl?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  description?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  frame?: string;
 }

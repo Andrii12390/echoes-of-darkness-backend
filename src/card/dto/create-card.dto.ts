@@ -1,12 +1,14 @@
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsPositive,
   IsString,
-  IsUrl,
-  Length
+  Length,
 } from 'class-validator';
+
+import { CardType } from '@prisma/client';
 
 export class CreateCardDto {
   @IsString()
@@ -16,7 +18,6 @@ export class CreateCardDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsUrl()
   imageUrl: string;
 
   @IsString()
@@ -25,8 +26,7 @@ export class CreateCardDto {
   description: string;
 
   @IsString()
-  @IsNotEmpty()
-  @Length(2, 50)
+  @IsEnum(CardType)
   type: string;
 
   @IsInt()
