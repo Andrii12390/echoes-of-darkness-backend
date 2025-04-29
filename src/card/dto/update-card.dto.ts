@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CardType } from '@prisma/client';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -18,37 +18,34 @@ export class UpdateCardDto {
   @IsString()
   @IsNotEmpty()
   @Length(2, 100)
-  name: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  imageUrl: string;
+  name?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   @IsNotEmpty()
   @Length(10, 200)
-  description: string;
+  description?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   @Transform(({ value }) => String(value).trim().toUpperCase())
   @IsEnum(CardType)
-  type: string;
+  type?: CardType;
 
   @ApiProperty()
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @IsPositive()
-  lane: number;
+  lane?: number;
 
+  
   @ApiProperty()
+  @Type(() => Number) 
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  strength: number;
+  strength?: number;
 }

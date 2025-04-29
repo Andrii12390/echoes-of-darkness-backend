@@ -8,7 +8,9 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post
+  Post,
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import { CardService } from './card.service';
 import { UpdateCardDto } from './dto/update-card.dto';
@@ -16,9 +18,9 @@ import { CreateCardDto } from './dto/create-card.dto';
 import { ApiResponse } from '@nestjs/swagger';
 import { cardExample } from './examples/card.example';
 import { Authorization } from 'src/common/decorators/auth.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Authorization()
-
 @Controller('card')
 export class CardController {
   constructor(private readonly cardService: CardService) {}
@@ -34,14 +36,14 @@ export class CardController {
     return this.cardService.findAll();
   }
 
-  
   @Post()
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({ status: 201, description: 'Card created', example: cardExample })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 409, description: 'Card with this name already exists' })
-  async create(@Body() data: CreateCardDto) {
-    return this.cardService.create(data);
+  async create(@Body() data: CreateCardDto, @UploadedFile() file: Express.Multer.File) {
+    return this.cardService.create(data, file);
   }
 
   @Get(':id')
@@ -54,7 +56,7 @@ export class CardController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({status: 200, description: 'Card deleted', example: cardExample })
+  @ApiResponse({ status: 200, description: 'Card deleted', example: cardExample })
   @ApiResponse({ status: 404, description: 'Card not found' })
   async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.cardService.deleteById(id);
@@ -62,11 +64,12 @@ export class CardController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({ status: 200, description: 'Card updated', example: cardExample })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 404, description: 'Card not found' })
   @ApiResponse({ status: 409, description: 'Card with this name already exists' })
-  async updateById(@Param('id', new ParseUUIDPipe()) id: string, @Body() data: UpdateCardDto) {
-    return this.cardService.updateById(id, data);
+  async updateById(@Param('id', new ParseUUIDPipe()) id: string, @Body() data: UpdateCardDto, @UploadedFile() file: Express.Multer.File) {
+    return this.cardService.updateById(id, data, file);
   }
 }

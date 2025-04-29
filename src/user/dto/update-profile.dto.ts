@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUrl, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiProperty()
@@ -14,13 +14,6 @@ export class UpdateProfileDto {
   @IsNotEmpty()
   @Length(5, 100)
   password?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @IsUrl()
-  avatarUrl?: string;
 
   @ApiProperty()
   @IsOptional()

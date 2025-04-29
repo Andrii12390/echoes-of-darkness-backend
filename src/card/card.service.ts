@@ -1,81 +1,73 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException
-} from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateCardDto } from './dto/update-card.dto';
 import { CreateCardDto } from './dto/create-card.dto';
+import { UpdateCardDto } from './dto/update-card.dto';
 import { CardType } from '@prisma/client';
+import { UploadService } from 'src/upload/upload.service';
+
+type UpdateCardPayload = UpdateCardDto & { imageUrl?: string };
 
 @Injectable()
 export class CardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly upload: UploadService
+  ) {}
 
-  async create(data: CreateCardDto) {
-    await this.checkByName(data.name);
-
-    return await this.prisma.card.create({
+  async create(data: CreateCardDto, file: Express.Multer.File) {
+    await this.ensureNameUnique(data.name);
+    const { imageUrl } = this.upload.saveFile(file);
+    return this.prisma.card.create({
       data: {
         ...data,
-        type: data.type as CardType
+        type: data.type as CardType,
+        imageUrl
       }
     });
   }
 
   async findAll() {
-    return await this.prisma.card.findMany();
+    return this.prisma.card.findMany();
   }
 
   async findById(id: string) {
-    const card = await this.prisma.card.findUnique({
-      where: {
-        id
-      }
-    });
-
-    if (!card) {
-      throw new NotFoundException('Card not found');
-    }
-
+    const card = await this.prisma.card.findUnique({ where: { id } });
+    if (!card) throw new NotFoundException(`Card ${id} not found`);
     return card;
   }
 
   async deleteById(id: string) {
-    await this.findById(id);
-
-    return await this.prisma.card.delete({
-      where: {
-        id
-      }
-    });
+    const card = await this.findById(id);
+    this.upload.deleteFile(card.imageUrl);
+    return this.prisma.card.delete({ where: { id } });
   }
 
-  async updateById(id: string, data: UpdateCardDto) {
-    await this.findById(id);
-    
-    if(data.name) {
-      await this.checkByName(data.name);
+  async updateById(id: string, data: UpdateCardDto, file?: Express.Multer.File) {
+    const existing = await this.findById(id);
+
+    if (data.name && data.name !== existing.name) {
+      await this.ensureNameUnique(data.name);
     }
 
-    const { type, ...rest } = data;
+    const updatedData: UpdateCardPayload = { ...data }
 
-    const updateData = {
-      ...rest,
-      ...(type !== undefined && { type: type as CardType })
-    };
+    if (file) {
+      this.upload.deleteFile(existing.imageUrl);
+      const { imageUrl } = this.upload.saveFile(file);
+      updatedData.imageUrl = imageUrl;
+    }
+
 
     return this.prisma.card.update({
       where: { id },
-      data: updateData
+      data: updatedData
     });
   }
 
-  private async checkByName(name: string) {
-    const existedCard = await this.prisma.card.findFirst({ where: { name } });
-
-    if (existedCard) {
-      throw new ConflictException('Card with this name already exists');
+  private async ensureNameUnique(name: string) {
+    const found = await this.prisma.card.findFirst({ where: { name } });
+    if (found) {
+      throw new ConflictException(`Card with name "${name}" already exists`);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
 import { Authorized } from 'src/common/decorators/authorized.decorator';
@@ -6,6 +6,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Authorization } from 'src/common/decorators/auth.decorator';
 import { ApiResponse } from '@nestjs/swagger';
 import { userExample } from './examples';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Authorization()
 @Controller('user')
@@ -23,11 +24,12 @@ export class UserController {
 
   @Patch('/profile')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({ status: 200, description: 'Profile updated', example: userExample })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updatedProfile(@Authorized() user: User, @Body() data: UpdateProfileDto) {
-    return this.userService.updateProfile(user.id, data);
+  async updatedProfile(@Authorized() user: User, @Body() data: UpdateProfileDto, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.updateProfile(user, data, file);
   }
 
   @Get('card')
