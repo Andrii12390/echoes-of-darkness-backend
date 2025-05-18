@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+/uploads/cards
+/uploads/avatars
+
 # Logs
 logs
 *.log
