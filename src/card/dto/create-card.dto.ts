@@ -1,8 +1,9 @@
 import {
+  IsBoolean,
   IsEnum,
-  IsInt,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
   Length,
@@ -20,10 +21,11 @@ export class CreateCardDto {
   name: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @Length(10, 200)
-  description: string;
+  description?: string;
 
   @ApiProperty()
   @IsString()
@@ -31,14 +33,38 @@ export class CreateCardDto {
   type: string;
 
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  cardCategory: string;
+
+  @ApiProperty()
+  @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsNumber()
   @IsPositive()
-  lane: number;
+  health?: number;
 
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
-  @IsPositive()
   strength: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  isLeader?: boolean;
+
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @Length(5, 200)
+  fraction: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  specialEffectId?: string;
 }

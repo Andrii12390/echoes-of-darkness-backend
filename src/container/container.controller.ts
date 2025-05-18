@@ -1,4 +1,4 @@
-import { Controller, Body, Get, Post, Delete, Param, HttpCode, HttpStatus, ParseUUIDPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Body, Get, Post, Delete, Param, HttpCode, HttpStatus, ParseUUIDPipe, UseInterceptors } from '@nestjs/common';
 
 import { ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ContainerService } from './container.service';
@@ -51,8 +51,8 @@ export class ContainerController {
   })
   @ApiResponse({ status: 400, description: 'Invalid data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  create(@Body() dto: CreateContainerDto, @UploadedFile() file: Express.Multer.File) {
-    return this.containerService.createContainer(dto, file);
+  create(@Body() dto: CreateContainerDto) {
+    return this.containerService.createContainer(dto);
   }
 
   @Delete(':id')
@@ -72,6 +72,14 @@ export class ContainerController {
     return this.containerService.getDropsByContainerId(id);
   }
 
+  @Post('generate')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: 200, description: 'Get drops', example: dropExample })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  generate() {
+    return this.containerService.generateContainers()
+  }
+
   @Post(':id/open')
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
@@ -82,6 +90,7 @@ export class ContainerController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Not enough money' })
   open(@Param('id', new ParseUUIDPipe()) id: string, @Authorized() user: User) {
+    console.log(user)
     return this.containerService.openContainer(user, id);
   }
 }

@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegistrationDto } from './dto/registration.dto';
 import * as bcrypt from 'bcrypt';
@@ -19,18 +14,15 @@ import { GithubPayload } from './interfaces/github.interface';
 export class AuthService {
   private REFRESH_TOKEN_EXPIRES_IN: string;
   private ACCESS_TOKEN_EXPIRES_IN: string;
+  private initialBalance = 1000;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private jwtService: JwtService
   ) {
-    this.REFRESH_TOKEN_EXPIRES_IN = configService.getOrThrow<string>(
-      'REFRESH_TOKEN_EXPIRES_IN'
-    );
-    this.ACCESS_TOKEN_EXPIRES_IN = configService.getOrThrow<string>(
-      'ACCESS_TOKEN_EXPIRES_IN'
-    );
+    this.REFRESH_TOKEN_EXPIRES_IN = configService.getOrThrow<string>('REFRESH_TOKEN_EXPIRES_IN');
+    this.ACCESS_TOKEN_EXPIRES_IN = configService.getOrThrow<string>('ACCESS_TOKEN_EXPIRES_IN');
   }
 
   async register(res: Response, dto: RegistrationDto) {
@@ -51,10 +43,12 @@ export class AuthService {
       data: {
         username,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        currencyBalance: this.initialBalance
       }
     });
 
+    await this.setInitialCards(newUser.id);
     return this.auth(res, newUser.id);
   }
 
@@ -71,13 +65,31 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    const isValid = bcrypt.compare(password, user.password!);
+    const isValid = await bcrypt.compare(password, user.password!);
 
     if (!isValid) {
       throw new NotFoundException('User not found');
     }
 
     return this.auth(res, user.id);
+  }
+
+  private async setInitialCards(userId: string) {
+    const cards = await this.prisma.card.findMany({
+      where: { OR: [{ fraction: 'Order of the Shining Sun' }, { isLeader: true }] },
+      select: { id: true }
+    });
+
+    const relations = cards.map(card => ({
+      userId,
+      cardId: card.id,
+      acquiredAt: new Date()
+    }));
+
+    await this.prisma.userCard.createMany({
+      data: relations,
+      skipDuplicates: true
+    });
   }
 
   private generateTokens(id: string) {
@@ -153,14 +165,19 @@ export class AuthService {
       return user;
     }
 
-    return await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email: data.email,
         username: data.username,
         googleId: data.googleId,
-        avatarUrl: data.avatarUrl
+        avatarUrl: data.avatarUrl,
+        currencyBalance: this.initialBalance
       }
     });
+
+    await this.setInitialCards(newUser.id);
+
+    return newUser;
   }
 
   async validateGithub(data: GithubPayload) {
@@ -174,14 +191,19 @@ export class AuthService {
       return user;
     }
 
-    return await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email: data.email,
         username: data.username,
         githubId: data.githubId,
-        avatarUrl: data.avatarUrl
+        avatarUrl: data.avatarUrl,
+        currencyBalance: this.initialBalance
       }
     });
+
+    await this.setInitialCards(newUser.id);
+
+    return newUser;
   }
 
   async loginGoogle(res: Response, req: Request) {
@@ -212,12 +234,7 @@ export class AuthService {
     return accessToken;
   }
 
-  private setCookie(
-    res: Response,
-    name: string,
-    token: string,
-    maxAgeMs: number
-  ) {
+  private setCookie(res: Response, name: string, token: string, maxAgeMs: number) {
     res.cookie(name, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

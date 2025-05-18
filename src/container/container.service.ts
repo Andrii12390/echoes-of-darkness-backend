@@ -2,14 +2,12 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateContainerDto } from './dto/create-container.dto';
 import { Container, ContainerDrop, Card, User } from '@prisma/client';
-import { UploadService } from 'src/upload/upload.service';
+import { GenerateContainerDto } from './dto/generate-container.dto';
+import { containers } from './data/containers.data';
 
 @Injectable()
 export class ContainerService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly upload: UploadService
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private async loadContainer(id: string, includeDrops = false): Promise<Container & { drops?: (ContainerDrop & { card: Card })[] }> {
     const container = await this.prisma.container.findUnique({
@@ -63,10 +61,25 @@ export class ContainerService {
 
     return drop.card;
   }
+  async deleteContainer(id: string): Promise<Container> {
+    return this.prisma.container.delete({ where: { id } });
+  }
 
-  async createContainer(data: CreateContainerDto, file: Express.Multer.File): Promise<Container & { drops: ContainerDrop[] }> {
-    const { imageUrl } = this.upload.saveFile(file);
-    
+  private getRandomDrop(drops: (ContainerDrop & { card: Card })[]): ContainerDrop & { card: Card } {
+    const rand = Math.floor(Math.random() * 100) + 1;
+    let cumulative = 0;
+
+    for (const d of drops) {
+      cumulative += Number(d.dropChancePct);
+      if (rand <= cumulative) {
+        return d;
+      }
+    }
+
+    return drops[drops.length - 1];
+  }
+
+  async createContainer(data: CreateContainerDto): Promise<Container & { drops: ContainerDrop[] }> {
     const total = data.drops.reduce((sum, d) => sum + d.dropChancePct, 0);
 
     if (Math.abs(total - 1) > 1e-6) {
@@ -78,7 +91,6 @@ export class ContainerService {
         name: data.name,
         description: data.description,
         price: data.price,
-        imageUrl,
         drops: {
           create: data.drops.map(d => ({ card: { connect: { id: d.cardId } }, dropChancePct: d.dropChancePct }))
         }
@@ -87,26 +99,41 @@ export class ContainerService {
     });
   }
 
-  async deleteContainer(id: string): Promise<Container> {
-    const container = await this.loadContainer(id);
-    this.upload.deleteFile(container.imageUrl);
-    
-    return this.prisma.container.delete({ where: { id } });
-  }
+  async generateContainers(): Promise<(Container & { drops: ContainerDrop[] })[]> {
+    const createdContainers: (Container & { drops: ContainerDrop[] })[] = [];
 
-  private getRandomDrop(drops: (ContainerDrop & { card: Card })[]): ContainerDrop & { card: Card } {
-    const totalWeight = drops.reduce((sum, d) => sum + +d.dropChancePct, 0);
-    let random = Math.random() * totalWeight;
-    let chosen = drops[0];
-
-    for (const d of drops) {
-      random -= +d.dropChancePct;
-
-      if (random <= 0) {
-        chosen = d;
-        break;
+    for (const dto of containers) {
+      if (dto.price < 300 || dto.price > 1000) {
+        throw new BadRequestException(`Price for "${dto.name}" must be between 300 and 1000.`);
       }
+
+      const cards = await this.prisma.card.findMany({
+        where: {
+          fraction: dto.fraction,
+          cardCategory: dto.cardCategory,
+          isLeader: false
+        },
+        select: { id: true }
+      });
+
+      if (cards.length === 0) {
+        throw new BadRequestException(`No cards for fraction="${dto.fraction}" and category="${dto.cardCategory}"`);
+      }
+      const chancePct = Number((1 / cards.length).toFixed(4)) * 100;
+      const dropsData = cards.map(c => ({ cardId: c.id, dropChancePct: chancePct }));
+
+      const container = await this.prisma.container.create({
+        data: {
+          name: dto.name,
+          description: dto.description,
+          price: dto.price,
+          drops: { create: dropsData }
+        },
+        include: { drops: true }
+      });
+
+      createdContainers.push(container);
     }
-    return chosen;
+    return createdContainers;
   }
 }

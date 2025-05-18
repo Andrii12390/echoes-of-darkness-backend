@@ -1,90 +1,114 @@
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
 
-enum CardType {
-  COMMON    @map("common")
-  RARE      @map("rare")
-  EPIC      @map("epic")
-  LEGENDARY @map("legendary")
-}
+  enum CardType {
+    COMMON    @map("common")
+    RARE      @map("rare")
+    EPIC      @map("epic")
+    LEGENDARY @map("legendary")
+  }
 
-model User {
-  id              String     @id @default(uuid())
-  username        String
-  email           String     @unique
-  avatarUrl       String?    @map("avatar_url")
-  password        String?
-  description     String?
-  currencyBalance Float      @default(0.0) @map("currency_balance")
-  frame           String     @default("default")
-  level           Int        @default(1)
-  cards           UserCard[]
+  enum SpecialEffectType {
+    ATTACK @map("attack")
+    HEAL  @map("heal")
+  }
 
-  googleId String? @map("google_id")
-  githubId String? @map("github_id")
+  model User {
+    id              String     @id @default(uuid())
+    username        String
+    email           String     @unique
+    avatarUrl       String?    @map("avatar_url")
+    password        String?
+    description     String?
+    currencyBalance Float      @default(0.0) @map("currency_balance")
+    frame           String     @default("default")
+    level           Int        @default(1)
+    cards           UserCard[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
-}
+    googleId String? @map("google_id")
+    githubId String? @map("github_id")
 
-model UserCard {
-  userId     String   @map("user_id")
-  cardId     String   @map("card_id")
-  acquiredAt DateTime @default(now()) @map("acquired_at")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt() @map("updated_at")
+  }
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  model UserCard {
+    userId     String   @map("user_id")
+    cardId     String   @map("card_id")
+    acquiredAt DateTime @default(now()) @map("acquired_at")
 
-  @@id([userId, cardId])
-  @@map("user_card")
-}
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-model Card {
-  id          String     @id @default(uuid())
-  name        String     @unique()
-  imageUrl    String     @map("image_url")
-  description String
-  type        CardType   @map("type")
-  lane        Int
-  strength    Int
-  users       UserCard[]
+    @@id([userId, cardId])
+    @@map("user_card")
+  }
 
-  containerDrops ContainerDrop[]
+  model Card {
+    id             String          @id @default(uuid())
+    name           String          @unique()
+    imageUrl       String          @map("image_url")
+    description    String?
+    cardCategory   String          @map("card_category")
+    type           CardType        @map("type")
+    health         Int?
+    strength       Int
+    isLeader       Boolean?        @default(false)
+    fraction       String
+    users          UserCard[]
+    containerDrops ContainerDrop[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
-}
+    specialEffect   SpecialEffect? @relation(fields: [specialEffectId], references: [id])
+    specialEffectId String?        @map("special_effect_id")
 
-model Container {
-  id          String          @id @default(uuid())
-  name        String
-  description String
-  price       Float           @default(0.0)
-  imageUrl    String
-  drops       ContainerDrop[]
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt() @map("updated_at")
+  }
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
-}
+  model SpecialEffect {
+    id          String            @id
+    name        String
+    description String
+    type        SpecialEffectType 
+    power       Int
 
-model ContainerDrop {
-  id          String    @id @default(uuid())
-  container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
-  containerId String    @map("container_id")
+    cards Card[]
 
-  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  cardId String @map("card_id")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt() @map("updated_at")
 
-  dropChancePct Decimal @map("drop_chance_pct")
+    @@map("special_effect")
+  }
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
+  model Container {
+    id          String          @id @default(uuid())
+    name        String
+    description String
+    price       Float           @default(0.0)
+    drops       ContainerDrop[]
 
-  @@map("container_drop")
-}
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt() @map("updated_at")
+  }
+
+  model ContainerDrop {
+    id          String    @id @default(uuid())
+    container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+    containerId String    @map("container_id")
+
+    card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+    cardId String @map("card_id")
+
+    dropChancePct Decimal @map("drop_chance_pct")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt() @map("updated_at")
+
+    @@map("container_drop")
+  }

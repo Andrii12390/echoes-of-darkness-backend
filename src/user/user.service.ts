@@ -32,7 +32,7 @@ export class UserService {
   }
 
   async findAllCards(id: string) {
-    return this.prisma.user.findUnique({
+    const data = await this.prisma.user.findUnique({
       where: {
         id
       },
@@ -43,6 +43,7 @@ export class UserService {
           }
         }
       }
-    });
+    }); 
+    return data?.cards.map((item) => item.card) 
   }
 }
