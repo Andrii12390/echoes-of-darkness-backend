@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { CardModule } from './card/card.module';
 import { ContainerModule } from './container/container.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { MatchModule } from './match/match.module';
 import * as path from 'path';
 
 @Module({
@@ -22,7 +23,8 @@ import * as path from 'path';
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
-    })
+    }),
+    MatchModule
   ]
 })
 export class AppModule {}
