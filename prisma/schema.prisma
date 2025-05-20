@@ -66,7 +66,6 @@
 
     specialEffect   SpecialEffect? @relation(fields: [specialEffectId], references: [id])
     specialEffectId String?        @map("special_effect_id")
-
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt() @map("updated_at")
   }

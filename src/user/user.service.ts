@@ -30,20 +30,22 @@ export class UserService {
       data: updatedData
     });
   }
-
-  async findAllCards(id: string) {
-    const data = await this.prisma.user.findUnique({
-      where: {
-        id
+async findAllCards(id: string) {
+  const userWithCards = await this.prisma.user.findUnique({
+    where: { id },
+    include: {
+      cards: {
+        include: {
+          card: {
+            include: {
+              specialEffect: true,
+            },
+          },
+        },
       },
-      include: {
-        cards: {
-          include: {
-            card: true
-          }
-        }
-      }
-    }); 
-    return data?.cards.map((item) => item.card) 
-  }
+    },
+  });
+  return userWithCards?.cards.map(item => item.card) ?? [];
+}
+
 }

@@ -1,27 +1,5 @@
 export const containers = [
   {
-    name: 'Sun’s Radiance Spells',
-    description: 'Powerful light-based spells from the Order.',
-    price: 400,
-    fraction: 'Order of the Shining Sun',
-    cardCategory: 'Spell'
-  },
-  {
-    name: 'Sunlight Vanguard Units',
-    description: 'Elite knights and paladins of the Order.',
-    price: 750,
-    fraction: 'Order of the Shining Sun',
-    cardCategory: 'Unit'
-  },
-  {
-    name: 'Order’s Support Arsenal',
-    description: 'Banners, reinforcements and sacred aids.',
-    price: 350,
-    fraction: 'Order of the Shining Sun',
-    cardCategory: 'Support'
-  },
-
-  {
     name: 'Arcane Tome Spells',
     description: "Mystic spells from the Conclave's archives.",
     price: 500,

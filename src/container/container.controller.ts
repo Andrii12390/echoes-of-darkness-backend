@@ -90,7 +90,6 @@ export class ContainerController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Not enough money' })
   open(@Param('id', new ParseUUIDPipe()) id: string, @Authorized() user: User) {
-    console.log(user)
     return this.containerService.openContainer(user, id);
   }
 }

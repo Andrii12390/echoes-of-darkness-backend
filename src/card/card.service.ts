@@ -22,7 +22,8 @@ export class CardService {
 
     const payload = {
       ...restData,
-      specialEffect: specialEffectId ? { connect: { id: specialEffectId } } : undefined
+      specialEffect: specialEffectId ? { connect: { id: specialEffectId } } : undefined,
+
     };
 
     return this.prisma.card.create({
